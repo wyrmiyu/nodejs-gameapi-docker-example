@@ -5,6 +5,12 @@ This example sets up containers for NodeJS server and MongoDB. The application w
 
 You'll need set up external reverse proxy if you wish to expose it further, or you could amend the docker-compose.yml to include a nginx container.
 
+## How to use
+
+* You need to install and setup docker; you also need the docker-compose tool
+* Modify docker-compose.yml to meet your needs and run command: docker-compose up --build -d
+* Done
+
 ## Authors
 
 * Docker bits: Pekka Wallendahl
