@@ -1,0 +1,20 @@
+version: "2"
+services:
+  web:
+    build: .
+    ports:
+      # The format is: "EXPOSED_HOST_PORT:INTERNAL_DOCKER_PORT"
+      - "3000:3000"
+    links:
+      - mongodb
+    environment:
+      - 'PORT=3000'
+      - 'UNITYADSSECRET=replace-me'
+
+  mongodb:
+    image: mongo
+    volumes:
+      - my_application_db:/data/db
+
+volumes:
+  my_application_db:
