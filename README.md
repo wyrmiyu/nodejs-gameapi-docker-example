@@ -8,7 +8,8 @@ You'll need set up external reverse proxy if you wish to expose it further, or y
 ## How to use
 
 * You need to install and setup docker; you also need the docker-compose tool
-* Modify docker-compose.yml to meet your needs and run command: docker-compose up --build -d
+* Create a file named .env and put in values for environment variables: EXTERNAL_HOST_PORT, INTERNAL_DOCKER_PORT and UNITYADSSECRET. For an example, please see file: env-example
+* Run command: docker-compose up --build -d
 * Done
 
 ## Authors

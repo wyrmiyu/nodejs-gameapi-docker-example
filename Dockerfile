@@ -1,5 +1,7 @@
 FROM node:latest
 
+ARG PORT
+
 RUN mkdir /app
 WORKDIR /app
 
@@ -7,6 +9,6 @@ COPY ./app/* /app/
 
 RUN npm install
 
-EXPOSE 3000
+EXPOSE $PORT
 
 CMD ["npm", "start"]
