@@ -7,6 +7,7 @@
 // When the server gets a S2S callback - release that reward for the player
 // When player requests that reward, they're granted it on the backend and on the client
 // Player logs in: ask for access token
+
 //TODO:
 // Users
 // Item codes -- could be a table
@@ -17,20 +18,26 @@
 // Rate limiting per user
 // Delay for user creation?
 // ITEM CODE ISSUE: store them on the client only - backend could be agnostic?
+
 var express = require('express');
 var crypto = require('crypto');
 var mongoose = require ('mongoose');
 var nodeuuid = require('node-uuid');
+
 const uuid = require('uuid');
 const uuidv4 = require('uuid/v4');
+
 mongoose.connect('mongodb://mongodb:27017/test');
+
 var Schema = mongoose.Schema;
 var app = express();
+
 var inventoryItemSchema = new Schema({
   typecode:       String,
   oid:        String,
   hasBeenRetrieved:   Boolean
 },{_id: false});
+
 var userSchema = new Schema({
   name:            String,
   playerToken:      String,
@@ -38,18 +45,23 @@ var userSchema = new Schema({
   cyclicToken:      String,
   inventory:       [inventoryItemSchema]
 });
+
 var User = mongoose.model('User',userSchema);
+
 app.listen(process.env.PORT || 1337);
+
 // returns HMAC signature for the given parameters
 function getHMAC(parameters, secret) {
   var sortedParameterString = sortParams(parameters);
   return crypto.createHmac('md5', secret).update(sortedParameterString).digest('hex');
 }
+
 // rehashes the token
 // TODO: Don't use cyclicity - more trust in pure random and cycling doesn't make sense and might only expose a vulnerability
 function getNewHash(oldstring, secret){
   return crypto.createHmac('md5', secret).update(oldstring).digest('hex');
 }
+
 // Sorts the parameters alphabetically
 function sortParams(parameters) {
   var params = parameters || {};
@@ -59,6 +71,7 @@ function sortParams(parameters) {
     .map(key => params[key] === null ? `${key}=` : `${key}=${params[key]}`)
     .join(',');
 }
+
 // TOKEN1: 98as7df9a8dsf7s9a8df7
 // Checksum made with MD5(TOKEN1 + salt)
 // SID should have: token_checksum_otherdatalikeitemtypecode
@@ -69,34 +82,37 @@ function delimitParams(parametrs, callback)
   // 2 : item type code
   callback(parameters.split("_"));
 }
+
 // Hands out a unique UUID v4
 function getNewToken(callback) {
-    var randomToken = nodeuuid.v4();
-    User.findOne({playerToken:randomToken}, function(err, token) {
-        if (err) {
-            return callback(true);
-        } else {
-            if (token != undefined) { // uuid is already taken
-                    getNewToken(callback); // try again
-                } else {
-                    callback(false,randomToken); //  return uuid/token
-                }
-        }
-    });
+  var randomToken = nodeuuid.v4();
+  User.findOne({playerToken:randomToken}, function(err, token) {
+    if (err) {
+      return callback(true);
+    } else {
+      if (token != undefined) { // uuid is already taken
+        getNewToken(callback); // try again
+      } else {
+        callback(false,randomToken); //  return uuid/token
+      }
+    }
+  });
 }
+
 // GET SIGN IN TOKEN
 app.get('/challenge', function (req,res) {
-    getNewToken(function (err, newToken) {
-            if (err) {
-                // error handling. maybe:
-                // console.log('DATABASE ERROR');
-                // res.status(200).send('ERROR');
-                } else {
-                    console.log('NEW TOKEN ' + newToken);
-                    res.status(200).send(newToken);
-                }
-    });
+  getNewToken(function (err, newToken) {
+    if (err) {
+      // error handling. maybe:
+      // console.log('DATABASE ERROR');
+      // res.status(200).send('ERROR');
+    } else {
+      console.log('NEW TOKEN ' + newToken);
+      res.status(200).send(newToken);
+    }
+  });
 });
+
 // Login endpoint
 app.get('/login', function (req,res) {
   // login with playerToken + currentRewardToken
@@ -108,7 +124,7 @@ app.get('/login', function (req,res) {
   User.findOne({playerToken:playerID, passToken:rewardToken}, function(err, doc) {
     if (err) {
       res.status(500).send('ERROR!');
-    }else {
+    } else {
       if (doc != null) {
         var rewards = [];
         var hasRewards = false;
@@ -121,12 +137,10 @@ app.get('/login', function (req,res) {
         if (hasRewards)
         {
           res.status(200).send(rewards);
-        }
-        else
-        {
+        } else {
           res.status(200).send(doc.cyclicToken);
         }
-      }else {
+      } else {
         console.log('Reward ID ' + rewardId);
         res.status(500).send('NOT FOUND!');
       }
@@ -135,9 +149,11 @@ app.get('/login', function (req,res) {
   // login using access token
   // return items and rewardID
 });
+
 // Call URL/getreward to fetch the stored rewards
 // Call this from the game client
 app.get('/getreward', function (req, res) {
+
   // login with playerToken + currentRewardToken
   // return currentRewardToken + json with items
 
@@ -147,7 +163,7 @@ app.get('/getreward', function (req, res) {
   User.findOne({playerToken:playerID, passToken:rewardToken}, function(err, doc) {
     if (err) {
       res.status(500).send('ERROR!');
-    }else {
+    } else {
       if (doc != null) {
         var rewards = [];
         var hasRewards = false;
@@ -167,16 +183,18 @@ app.get('/getreward', function (req, res) {
           doc.save();
           res.status(200).send(rewards + doc.cyclicToken);
         }
-      }else {
+      } else {
         console.log('Reward ID ' + rewardId);
         res.status(500).send('NOT FOUND!');
       }
     }
   });
 });
+
 // Store the reward - Unity Ads S2S callbacks will call this
 app.get('/storerewards', function (req, res) {
-console.log("New callback: " + req.query.sid + " " + req.query.oid + " " + req.query.hmac);
+  console.log("New callback: " + req.query.sid + " " + req.query.oid + " " + req.query.hmac);
+
   //var sid = req.query.sid;
   //var oidi = req.query.oid;
   var hmacci = req.query.hmac;
@@ -185,6 +203,7 @@ console.log("New callback: " + req.query.sid + " " + req.query.oid + " " + req.q
   // do the hash check with payload[0] and payload[1]
   var clientSecret = process.env.GAMECLIENTSECRET || 'gameclientsecret12341234';
   var newchecksum = getNewHash(payload[0], clientSecret);
+  
   console.log("NEW S2S! - " + payload[0] + " - " + payload[1] + " - " + newchecksum );
   if (newchecksum === payload[1])
   {
