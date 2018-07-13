@@ -3,7 +3,8 @@ FROM node:latest
 ARG PORT
 
 RUN mkdir /app && \
-    groupadd -r nodeapp && useradd -r -g nodeapp nodeapp
+    groupadd -r nodeapp && \
+    useradd -r -g nodeapp nodeapp
 
 WORKDIR /app
 
