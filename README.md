@@ -14,5 +14,5 @@ You'll need set up external reverse proxy if you wish to expose it further, or y
 
 ## Authors
 
-* Docker bits: Pekka Wallendahl
+* Docker bits: Sandi Wallendahl
 * Example app: Mika Isomaa
